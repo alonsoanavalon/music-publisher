@@ -1,8 +1,15 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import configuration from './config/configuration';
 import { PublisherModule } from './publisher/publisher.module';
-import { LoggerModule } from './logger/logger.module';
-
 @Module({
-  imports: [PublisherModule, LoggerModule],
+  imports: [
+    PublisherModule,
+    ConfigModule.forRoot({
+      load: [configuration],
+    }),
+  ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
