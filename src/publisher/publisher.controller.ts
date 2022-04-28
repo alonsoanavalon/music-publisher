@@ -19,14 +19,11 @@ export class PublisherController {
   })
   @ApiResponse({
     status: 400,
-    description: 'The body of album is not a AlbumDTO object',
+    description: 'The albums body is not an AlbumDTO object',
   })
   @Post()
-  create(@Body() album: AlbumDTO): string {
-    return 'Llegó con exito el album\n' + album;
-  }
-  @Get()
-  testPubSub(): any {
-    return this.publisherService.publishMessage();
+  create(@Body() album: AlbumDTO): Promise<AlbumDTO> {
+    this.loggerService.info('Message saved successfully');
+    return this.publisherService.publishMessage(album);
   }
 }
