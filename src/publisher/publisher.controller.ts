@@ -19,7 +19,7 @@ export class PublisherController {
   })
   @ApiResponse({
     status: 400,
-    description: 'The albums body is not an AlbumDTO object',
+    description: "The album's body is not an AlbumDTO object",
   })
   @Post()
   create(@Body() album: AlbumDTO): Promise<AlbumDTO> {
