@@ -2,8 +2,9 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PubSub } from '@google-cloud/pubsub';
 import { LoggerService } from '../logger/logger.service';
-import { AlbumDTO } from './dto/album.dto';
+import { AlbumDTO } from './dto/album/album.dto';
 import { uuid as v4 } from 'uuidv4';
+import { AttributesDTO } from './dto/attributes.dto';
 
 @Injectable()
 export class PublisherService {
@@ -30,8 +31,12 @@ export class PublisherService {
     this.topic = process.env.GCLOUD_PUBSUB_TOPIC_ID;
   }
 
+  parseAttributes = (attributes: object) => {
+    return JSON.parse(JSON.stringify(attributes));
+  };
+
   generateAttributes = (album: AlbumDTO) => {
-    return {
+    const generatedAttributes: AttributesDTO = {
       eventId: v4(),
       eventType: album.eventType,
       entityId: album.productDetail.sku,
@@ -46,11 +51,12 @@ export class PublisherService {
       capability: 'XINTEC',
       mimeType: 'application/json',
     };
+
+    return this.parseAttributes(generatedAttributes);
   };
 
   publishMessage = async (album: AlbumDTO): Promise<AlbumDTO> => {
-    const attributes = this.generateAttributes(album);
-
+    const attributes: { [k: string]: string } = this.generateAttributes(album);
     delete album.eventType;
     const albumToString = JSON.stringify(album);
     const data = Buffer.from(albumToString);

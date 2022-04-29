@@ -1,7 +1,7 @@
 import { Controller, Body, Post, Get } from '@nestjs/common';
 import { LoggerService } from 'src/logger/logger.service';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AlbumDTO } from './dto/album.dto';
+import { AlbumDTO } from './dto/album/album.dto';
 import { PublisherService } from './publisher.service';
 
 @Controller('publisher')
