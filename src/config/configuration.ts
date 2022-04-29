@@ -1,12 +1,13 @@
 export default () => ({
   environment: process.env.ENVIRONMENT,
   port: parseInt(process.env.PORT, 10),
+  pullLimit: process.env.GCLOUD_PUBSUB_SUBSCRIPTION_PULL_LIMIT,
   api: {
     topic: {
       endpoint: process.env.API_TASKS_ENDPOINT,
     },
   },
-  pusbub: {
+  pubsub: {
     pullLimit: process.env.GCLOUD_PUBSUB_SUBSCRIPTION_PULL_LIMIT,
     subscriptionName: process.env.GCLOUD_PUBSUB_SUBCRIPTION_NAME,
     subscriberB64: process.env.GCLOUD_PUBSUB_SUBSCRIBER_B64,

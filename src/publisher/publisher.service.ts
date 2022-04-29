@@ -16,7 +16,7 @@ export class PublisherService {
     private readonly loggerService: LoggerService,
   ) {
     const buffer = Buffer.from(
-      process.env.GCLOUD_PUBSUB_SUBSCRIBER_B64,
+      this.configService.get<string>('pubsub.subscriberB64'),
       'base64',
     );
 
@@ -24,11 +24,11 @@ export class PublisherService {
     const credentialJson = JSON.parse(credentialDecoded);
 
     this.client = new PubSub({
-      projectId: process.env.GCLOUD_PROJECT_ID,
+      projectId: configService.get<string>('pubsub.projectId'),
       credentials: credentialJson,
     });
 
-    this.topic = process.env.GCLOUD_PUBSUB_TOPIC_ID;
+    this.topic = configService.get<string>('pubsub.topicId');
   }
 
   parseAttributes = (attributes: object) => {
