@@ -4,7 +4,11 @@ import { PubSub } from '@google-cloud/pubsub';
 import { LoggerService } from '../logger/logger.service';
 import { AlbumDTO } from './dto/album/album.dto';
 import { uuid as v4 } from 'uuidv4';
+
 import { AttributesDTO } from './dto/attributes.dto';
+import * as moment from 'moment';
+import 'moment-timezone';
+import { HeadersDTO } from '../headers/headers.request';
 
 @Injectable()
 export class PublisherService {
@@ -15,13 +19,13 @@ export class PublisherService {
     private readonly configService: ConfigService,
     private readonly loggerService: LoggerService,
   ) {
-    const buffer = Buffer.from(
+    const buffer: Buffer = Buffer.from(
       this.configService.get<string>('pubsub.subscriberB64'),
       'base64',
     );
 
-    const credentialDecoded = buffer ? buffer.toString() : null;
-    const credentialJson = JSON.parse(credentialDecoded);
+    const credentialDecoded: string = buffer ? buffer.toString() : null;
+    const credentialJson: any = JSON.parse(credentialDecoded);
 
     this.client = new PubSub({
       projectId: configService.get<string>('pubsub.projectId'),
@@ -41,21 +45,27 @@ export class PublisherService {
       eventType: album.eventType,
       entityId: album.productDetail.sku,
       entityType: 'musicAlbum',
-      timestamp: '',
-      datetime: `2019-12-04`,
+      timestamp: `${moment().unix().toString()}`,
+      datetime: `${moment()
+        .tz('America/Santiago')
+        .toISOString(true)
+        .substring(0, 23)}Z`,
       version: '1.0',
-      country: 'CL/MX/AR',
-      commerce: 'FALABELLA',
-      channel: 'WEB',
-      domain: 'XINTEC',
-      capability: 'XINTEC',
+      country: this.configService.get('headers.countries'),
+      commerce: `${this.configService.get('headers.x_commerce')}`,
+      channel: `${this.configService.get('headers.x_chref')}`,
+      domain: `${this.configService.get('headers.atrib_domain')}`,
+      capability: `${this.configService.get('headers.x_capability')}`,
       mimeType: 'application/json',
     };
 
     return this.parseAttributes(generatedAttributes);
   };
 
-  publishMessage = async (album: AlbumDTO): Promise<AlbumDTO> => {
+  publishMessage = async (
+    album: AlbumDTO,
+    headers: HeadersDTO,
+  ): Promise<AlbumDTO> => {
     const attributes: { [k: string]: string } = this.generateAttributes(album);
     delete album.eventType;
     const albumToString = JSON.stringify(album);
@@ -65,11 +75,11 @@ export class PublisherService {
       const messageId = await this.client
         .topic(this.topic)
         .publishMessage({ data, attributes });
-      this.loggerService.info('Message published' + messageId);
+      this.loggerService.info(headers, `Message published ${messageId}`);
     } catch (error) {
       this.loggerService.error(
-        'Received error while publishing: ',
-        error.message,
+        headers,
+        `Received error while publishing: ${error.message} `,
       );
       throw new BadRequestException();
     }

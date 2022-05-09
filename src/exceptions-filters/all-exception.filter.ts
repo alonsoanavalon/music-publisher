@@ -25,7 +25,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    this.logger.error(exception.message, exception, request.headers);
+    this.logger.error(request.headers, exception.message);
 
     if (this.configService.get<string>('environment') == 'development') {
       response.status(status).json({

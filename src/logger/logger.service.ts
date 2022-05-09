@@ -1,98 +1,48 @@
 import { Injectable } from '@nestjs/common';
 import winston = require('winston');
-import { createLogger } from 'winston';
-import { ConfigService } from '@nestjs/config';
-import { Console } from 'winston/lib/winston/transports';
-import { utilities as nestWinstonModuleUtilities } from 'nest-winston';
-
+import * as moment from 'moment-timezone';
+import * as log from 'npmlog';
+import * as circularJSON from 'circular-json';
 @Injectable()
 export class LoggerService {
-  private logger: any;
+  private serviceReference = process.env.npm_package_name;
+  private nodeReference = process.env.NODE_REF;
+  private environment = process.env.ENVIRONMENT;
+  private timezone = process.env.TIMEZONE || 'America/Santiago';
 
-  //dependency injection, we need this to use the config env vars.
-  constructor(private readonly configService: ConfigService) {
-    //every logger needs a transport, transport is a storage device for our logs.
-    const consoleTransport = new Console({
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.ms(),
-        nestWinstonModuleUtilities.format.nestLike(
-          'v' + process.env.npm_package_version,
-          {
-            prettyPrint: true,
-          },
-        ),
-      ),
-    });
-    //level get the log.level from configservice or use 'info' instead.
-    const level: string = configService.get<string>('log.level') || 'info';
-    this.logger = createLogger({
-      level: level,
-      transports: [consoleTransport],
-    });
+  async info(headers: Record<string, any>, message: any) {
+    log.info(
+      this.dateFormat(),
+      'info',
+      circularJSON.stringify(message),
+      this.buildMessage(headers),
+    );
   }
 
-  /**
-   * Write a 'log' level log.
-   */
-  info(message: string, headers?: Record<string, any>) {
-    // add your tailored logic here
-    this.logger.info(message, this.buildMessage(headers));
+  async error(headers: Record<string, any>, message: any) {
+    log.error(
+      this.dateFormat(),
+      'error',
+      circularJSON.stringify(message),
+      this.buildMessage(headers),
+    );
   }
 
-  /**
-   * Write an 'error' level log.
-   */
-  error(message: any, exception: Error, headers?: Record<string, any>) {
-    // add your tailored logic here
-    this.logger.error(message, this.buildMessage(headers, exception));
+  private buildMessage(headers: Record<string, any>): string {
+    return `srvRef=${this.serviceReference} txEpd=0 txRef=${
+      (headers && headers['x-txref']) || null
+    } cmRef=${(headers && headers['x-cmref']) || null} nodeRef=${
+      this.nodeReference
+    } rhsRef=${(headers && headers['x-prref']) || null} chRef=${
+      (headers && headers['x-chref']) || null
+    } prRef=${(headers && headers['x-prref']) || null} commerce=${
+      (headers && headers['x-commerce']) || null
+    } country=${(headers && headers['x-country']) || null} usrTx=${
+      (headers && headers['x-usrtx']) || null
+    } environment=${this.environment}`;
   }
 
-  /**
-   * Write a 'warn' level log.
-   */
-  warn(message: any) {
-    // add your tailored logic here
-    this.logger.warn(message);
-  }
-
-  /**
-   * Write a 'debug' level log.
-   */
-  debug(message: any) {
-    // add your tailored logic here
-    this.logger.debug(message);
-  }
-
-  /**
-   * Write a 'verbose' level log.
-   */
-  verbose(message: any) {
-    // add your tailored logic here
-    this.logger.verbose(message);
-  }
-
-  private buildMessage(headers?: Record<string, any>, exception?: Error): any {
-    if (headers && exception) {
-      return {
-        dominio: headers['x-saesa-dominio'],
-        subdominio: headers['x-saesa-sub-dominio'],
-        transactionid: headers['x-saesa-transaction-id'],
-        exception: exception,
-        stack: exception.stack,
-      };
-    } else if (headers) {
-      return {
-        dominio: headers['x-saesa-dominio'],
-        subdominio: headers['x-saesa-sub-dominio'],
-        transactionid: headers['x-saesa-transaction-id'],
-      };
-    } else if (exception) {
-      return {
-        exception: exception,
-        stack: exception.stack,
-      };
-    }
-    return {};
+  private dateFormat() {
+    return moment().tz(this.timezone).format('YYYY-MM-DD HH:mm:ss.SSS');
   }
 }

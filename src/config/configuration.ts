@@ -1,6 +1,15 @@
 export default () => ({
   environment: process.env.ENVIRONMENT,
   port: parseInt(process.env.PORT, 10),
+  headers: {
+    timezone: process.env.TIMEZONE,
+    environment: process.env.ENVIRONMENT,
+    countries: process.env.COUNTRIES,
+    x_commerce: process.env.X_COMMERCE,
+    x_chref: process.env.X_CHREF,
+    atrib_domain: process.env.ATRIB_DOMAIN,
+    atrib_capability: process.env.ATRIB_CAPABILITY,
+  },
   pullLimit: process.env.GCLOUD_PUBSUB_SUBSCRIPTION_PULL_LIMIT,
   api: {
     topic: {
